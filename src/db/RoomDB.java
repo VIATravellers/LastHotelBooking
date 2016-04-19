@@ -1,11 +1,12 @@
 package db;
 
 import java.util.ArrayList;
+import java.util.Scanner;
 
 import model.Room;
 
 public class RoomDB {
-	
+    //this is my second commit
 	//ArrayList of all the rooms in the hotel
 	private ArrayList<Room> allRoom;
 	

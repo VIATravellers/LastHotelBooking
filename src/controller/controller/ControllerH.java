@@ -13,7 +13,7 @@ import model.Room;
 
 public class ControllerH implements InterControllerH
 {
-
+    //this is my second commit
    private Scanner scanner = new Scanner(System.in);
 
    private MyDate departureDate;
