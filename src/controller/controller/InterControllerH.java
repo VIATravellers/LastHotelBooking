@@ -18,6 +18,7 @@ public interface InterControllerH {
 	public void checkOut();
 	public void getPrice(Booking booking);
 	public void setBooking(Booking booking);
+	public void returntoMainMenu();
 	
 	
 

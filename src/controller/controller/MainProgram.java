@@ -13,9 +13,6 @@ public class MainProgram {
 		
 		ControllerH controller = new ControllerH();
 		controller.start();
-		
-		//System.out.println(room.toString());
-
 	}
 
 }

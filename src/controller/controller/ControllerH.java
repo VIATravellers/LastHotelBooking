@@ -5,14 +5,13 @@ package controller.controller;
 import java.util.ArrayList;
 import java.util.Scanner;
 
+import view.*;
 import db.RoomDB;
-import model.Booking;
-import model.Guest;
-import model.MyDate;
-import model.Room;
+import model.*;
+
 
 public class ControllerH implements InterControllerH {
-	// this is my second commit
+
 	private Scanner scanner = new Scanner(System.in);
 
 	private MyDate tempArr;
@@ -23,7 +22,17 @@ public class ControllerH implements InterControllerH {
 	private ArrayList<Booking> bookings;
 	private ArrayList<Room> availableRooms;
 	private ArrayList<Room> occupied;
+    private MainMenu menu ;
+    private CheckinGuestMenu checkinMenu ;
+    private CheckoutGuestMenu checkoutMenu ;
+    private CreateBookingMenu createBookingMenu ;
+    private FindBookingMenu findBookingMenu ;
+    private DeleteBookingMenu deleteBookingMenu ;
+    private ExitProgramMenu exitProgramMenu ;
+    private CommonMenu commonmenu ;
 
+
+    
 	public ControllerH() {
 		new MyDate(0, 0, 0);
 		new MyDate(0, 0, 0);
@@ -35,30 +44,32 @@ public class ControllerH implements InterControllerH {
 		rooms = new RoomDB();
 		bookings = new ArrayList<>();
 		occupied = new ArrayList<>();
-
+		menu = new MainMenu();
+		checkinMenu = new CheckinGuestMenu();
+		checkoutMenu = new CheckoutGuestMenu();
+		createBookingMenu = new CreateBookingMenu();
+		findBookingMenu = new FindBookingMenu(); 
+		deleteBookingMenu = new DeleteBookingMenu();
+		exitProgramMenu = new ExitProgramMenu();
+		commonmenu=new CommonMenu();
+		
 	}
 
 	@Override
 	public void start() {
+	
+		menu.startMenu();
+		
 
-		System.out.println(" ");
-		System.out.println(" ");
-		System.out.println("Enter number of interaction, you want to do!!");
-		System.out.println(" ");
-
-		// Menu
-		System.out.println("1. Create Booking\n" + "2. Find Booking\n"
-				+ "3. Delete Booking\n" + "4. CheckIn\n" + "5.CheckOut\n"+ "6.Exit");
 		boolean go = false;
 		while (go == false) {
 
 			char number = scanner.next().charAt(0);
 
-			if ((number < '1' || number > '4')
+			if ((number < '1' || number >= '7')
 					&& (number > 'A' || number < 'z')) {
 
-				System.out
-						.println("Wrong character or incorrect number, try again");
+				commonmenu.printOut("Wrong character or incorrect number, try again");
 
 			}
 
@@ -67,29 +78,29 @@ public class ControllerH implements InterControllerH {
 					exit();
 				} else if (number == '1') {
 
-					System.out.println("Number: " + number);
+					commonmenu.printOut("Number: " + number);
 
 					createBooking();
 					go = true;
 				} else if (number == '2') {
-					System.out.println("Number: " + number);
+					commonmenu.printOut("Number: " + number);
 
 					findBooking();
 					go = true;
 
 				} else if (number == '3') {
-					System.out.println("Number: " + number);
+					commonmenu.printOut("Number: " + number);
 
 					deleteBooking();
 					go = true;
 
 				}else if (number == '4') {    //this is new (press 4 for checkIn)
-					System.out.println("Number: " + number);
+					commonmenu.printOut("Number: " + number);
 
 					checkIn() ;
 					go = true;
 				} else if (number == '5') {  // this is new (press 5 for checkOut)
-					System.out.println("Number: " + number);
+					commonmenu.printOut("Number: " + number);
 
 					checkOut();
 					go = true;
@@ -101,11 +112,14 @@ public class ControllerH implements InterControllerH {
 	}
 	// this new (checkOut)
 	public void checkOut() {
-		System.out.println("\n");
-		System.out.println("Find booking by name");
-		System.out.println("Enter guest_name :");
+		checkoutMenu = new CheckoutGuestMenu();
+		
+		checkoutMenu.startCheckOut();
+		scanner.nextLine();
+		
+		checkoutMenu.userInput("guest name : ");
 		String name = scanner.nextLine();
-		System.out.println("Enter passportNo :");
+		checkoutMenu.userInput("passportNo :");
 		scanner.nextLine();
 		String passportNo = scanner.nextLine();
 
@@ -119,10 +133,10 @@ public class ControllerH implements InterControllerH {
 			}
 		}
 		if (result == null) {
-			System.out.println("No booking founded!");
+			commonmenu.printOut("No booking founded!");
 		} else {
-			System.out.println(result.toString());
-			System.out.println("Press Enter to get the price :");
+			commonmenu.printOut(result.toString());
+			commonmenu.printOut("Press Enter to get the price :");
 			String enter = scanner.nextLine();
 			getPrice(result);
 		}
@@ -145,15 +159,16 @@ public class ControllerH implements InterControllerH {
 		double pricePerDay = booking.getRoom().getRoomPrice();
 
 		double costRoom = pricePerDay * count;
-		System.out.println("Total price : " + costRoom);
+		commonmenu.printOut("Total price : " + costRoom);
 
 	}
 
 	//this is the checkIn (new)
 	public void checkIn() {
-		System.out.println("\n");
-		System.out.println("Find booking by name");
-		System.out.println("Enter guest_name :");
+		
+		checkinMenu = new CheckinGuestMenu();
+		checkinMenu.startCheckIn();
+		checkinMenu.userInput("guest name :");
 		String name = scanner.nextLine();
 		MyDate today = new MyDate();
 		Booking result = null ;
@@ -173,17 +188,17 @@ public class ControllerH implements InterControllerH {
 	}
 
 	public void setBooking(Booking booking) {
-		System.out.println("Edit booking :");
-		System.out.println("Enter nationality :");
+		commonmenu.printOut("Edit booking :");
+		checkinMenu.userInput("nationality :");
 		String nationality = scanner.nextLine();
-		System.out.println("Enter day of birthday :");
+		checkinMenu.userInput("day of birthday :");
 		int birthday = scanner.nextInt();
-		System.out.println("Enter month of birthday :");
+		checkinMenu.userInput("month of birthday :");
 		int birthmonth = scanner.nextInt();
-		System.out.println("Enter year of birthday :");
+		checkinMenu.userInput("year of birthday :");
 		int birthyear = scanner.nextInt();
 		MyDate birthdate = new MyDate(birthday, birthmonth, birthyear);
-		System.out.println("Enter passportNo : ");
+		checkinMenu.userInput("passportNo : ");
 		String passportNo = scanner.nextLine() ;
 		Guest guest = new Guest(booking.getGuest().getName(), nationality,
 				birthdate, booking.getGuest().getTelephoneNo(), booking.getGuest().getEmail(),
@@ -197,45 +212,38 @@ public class ControllerH implements InterControllerH {
 	public void createBooking() {
 
 		searchAvailabeRoom();
-
-		System.out.println("Enter room number");
+		createBookingMenu = new CreateBookingMenu();
+		
+		createBookingMenu.userInput(" room number");
 		int roomNo = scanner.nextInt();
 		Room room = rooms.getRoomByRoomNo(roomNo);
 
-		// roomsNo.add(counter,roomNo);
 
-		System.out.println("Enter name");
+		createBookingMenu.userInput(" name");
 		scanner.nextLine();
 		String name = scanner.nextLine();
 
-		// new
-
-		System.out.println("Enter email");
-		// scanner.nextLine();
+		createBookingMenu.userInput(" email");
 		String email = scanner.nextLine();
 
-		System.out.println("Enter phone number");
-		// scanner.nextLine();
+		createBookingMenu.userInput("phone number");
 		String telephoneNo = scanner.nextLine();
 
 		Guest guest = new Guest(name, email, telephoneNo);
-		// customerName.add(counter,name);
 
 		Booking booking = new Booking(guest, desiredArrival, desiredDeparture,
 				room);
 		bookings.add(booking);
-		System.out.println(booking.toString());
-		// counter++;
+		commonmenu.printOut(booking.toString());
 		start();
 
 	}
 
 	@Override
 	public void findBooking() {
-		System.out.println("\n");
-		System.out.println("Find booking by :");
-		System.out.println("1. Name\n" + "2. Arrival and Departure\n"
-				+ "3. Room number\n" + "4. Return\n" + "5. Exit");
+		
+		findBookingMenu = new FindBookingMenu();
+		findBookingMenu.startFindBooking();
 		boolean go = false;
 		while (go == false) {
 
@@ -244,8 +252,7 @@ public class ControllerH implements InterControllerH {
 			if ((number < '1' || number > '5')
 					&& (number > 'A' || number < 'z')) {
 
-				System.out
-						.println("Wrong character or incorrect number, try again");
+				commonmenu.printOut("Wrong character or incorrect number, try again");
 
 			}
 
@@ -257,7 +264,7 @@ public class ControllerH implements InterControllerH {
 				}
 
 				else if (number == '1') {
-					System.out.println("Enter name");
+					findBookingMenu.userInput(" name");
 					scanner.nextLine();
 					String na = scanner.nextLine();
 
@@ -265,7 +272,7 @@ public class ControllerH implements InterControllerH {
 
 						if (bookings.get(i).getGuest().getName()
 								.equalsIgnoreCase(na)) {
-							System.out.println(bookings.get(i).toString());
+							commonmenu.printOut(bookings.get(i).toString());
 							go = true;
 							start();
 
@@ -276,33 +283,33 @@ public class ControllerH implements InterControllerH {
 				} else if (number == '2') {
 					// Arrival date
 					scanner.nextLine();
-					System.out.println("Enter arrival day");
+					findBookingMenu.userInput("arrival day");
 					int arrival1 = scanner.nextInt();
 					int aday = arrival1;
 
 					scanner.nextLine();
-					System.out.println("Enter arrival month");
+					findBookingMenu.userInput("arrival month");
 					arrival1 = scanner.nextInt();
 					int amonth = arrival1;
 
 					scanner.nextLine();
-					System.out.println("Enter arrival year");
+					findBookingMenu.userInput("arrival year");
 					arrival1 = scanner.nextInt();
 					int ayear = arrival1;
 
 					// Departure date
 					scanner.nextLine();
-					System.out.println("Enter departure day");
+					findBookingMenu.userInput("departure day");
 					arrival1 = scanner.nextInt();
 					int dday = arrival1;
 
 					scanner.nextLine();
-					System.out.println("Enter departure month");
+					findBookingMenu.userInput("departure month");
 					arrival1 = scanner.nextInt();
 					int dmonth = arrival1;
 
 					scanner.nextLine();
-					System.out.println("Enter departure year");
+					findBookingMenu.userInput("departure year");
 					arrival1 = scanner.nextInt();
 					int dyear = arrival1;
 
@@ -328,7 +335,7 @@ public class ControllerH implements InterControllerH {
 							;
 
 						{
-							System.out.println(bookings.get(i).toString());
+							commonmenu.printOut(bookings.get(i).toString());
 							go = true;
 							start();
 
@@ -339,13 +346,13 @@ public class ControllerH implements InterControllerH {
 				}
 
 				else if (number == '3') {
-					System.out.println("Enter room number");
+					findBookingMenu.userInput("room number");
 
 					int na = scanner.nextInt();
 
 					for (int i = 0; i < bookings.size(); i++) {
 						if (bookings.get(i).getRoom().getRoomNo() == na) {
-							System.out.println(bookings.get(i).toString());
+							commonmenu.printOut(bookings.get(i).toString());
 							go = true;
 							start();
 
@@ -361,10 +368,8 @@ public class ControllerH implements InterControllerH {
 
 	@Override
 	public void deleteBooking() {
-		System.out.println("\n");
-		System.out.println("Find booking by :");
-		System.out.println("1. Name\n" + "2. Arrival and Departure\n"
-				+ "3. Room number\n" + "4. Return\n" + "5. Exit");
+		deleteBookingMenu = new DeleteBookingMenu();
+		deleteBookingMenu.startDeleteBooking();
 		boolean go = false;
 		while (go == false) {
 
@@ -373,8 +378,7 @@ public class ControllerH implements InterControllerH {
 			if ((number < '1' || number > '5')
 					&& (number > 'A' || number < 'z')) {
 
-				System.out
-						.println("Wrong character or incorrect number, try again");
+				commonmenu.printOut("Wrong character or incorrect number, try again");
 
 			}
 
@@ -386,7 +390,7 @@ public class ControllerH implements InterControllerH {
 				}
 
 				else if (number == '1') {
-					System.out.println("Enter name");
+					deleteBookingMenu.userInput("name");
 					scanner.nextLine();
 					String na = scanner.nextLine();
 
@@ -394,7 +398,7 @@ public class ControllerH implements InterControllerH {
 
 						if (bookings.get(i).getGuest().getName()
 								.equalsIgnoreCase(na)) {
-							System.out.println(bookings.get(i).toString());
+							commonmenu.printOut(bookings.get(i).toString());
 							go = true;
 							start();
 
@@ -405,33 +409,33 @@ public class ControllerH implements InterControllerH {
 				} else if (number == '2') {
 					// Arrival date
 					scanner.nextLine();
-					System.out.println("Enter arrival day");
+					deleteBookingMenu.userInput("arrival day");
 					int arrival1 = scanner.nextInt();
 					int aday = arrival1;
 
 					scanner.nextLine();
-					System.out.println("Enter arrival month");
+					deleteBookingMenu.userInput("arrival month");
 					arrival1 = scanner.nextInt();
 					int amonth = arrival1;
 
 					scanner.nextLine();
-					System.out.println("Enter arrival year");
+					deleteBookingMenu.userInput("arrival year");
 					arrival1 = scanner.nextInt();
 					int ayear = arrival1;
 
 					// Departure date
 					scanner.nextLine();
-					System.out.println("Enter departure day");
+					deleteBookingMenu.userInput("departure day");
 					arrival1 = scanner.nextInt();
 					int dday = arrival1;
 
 					scanner.nextLine();
-					System.out.println("Enter departure month");
+					deleteBookingMenu.userInput("departure month");
 					arrival1 = scanner.nextInt();
 					int dmonth = arrival1;
 
 					scanner.nextLine();
-					System.out.println("Enter departure year");
+					deleteBookingMenu.userInput("departure year");
 					arrival1 = scanner.nextInt();
 					int dyear = arrival1;
 
@@ -457,7 +461,7 @@ public class ControllerH implements InterControllerH {
 							;
 
 						{
-							System.out.println(bookings.get(i).toString());
+							commonmenu.printOut(bookings.get(i).toString());
 							go = true;
 							start();
 
@@ -468,13 +472,13 @@ public class ControllerH implements InterControllerH {
 				}
 
 				else if (number == '3') {
-					System.out.println("Enter room number");
+					deleteBookingMenu.userInput("room number");
 					scanner.nextInt();
 					int na = scanner.nextInt();
 
 					for (int i = 0; i < bookings.size(); i++) {
 						if (bookings.get(i).getRoom().getRoomNo() == na) {
-							System.out.println(bookings.get(i).toString());
+							commonmenu.printOut(bookings.get(i).toString());
 							go = true;
 							start();
 
@@ -490,36 +494,36 @@ public class ControllerH implements InterControllerH {
 
 	@Override
 	public void searchAvailabeRoom() {
-
+		menu = new MainMenu();
 		// Arrival date
-		scanner.nextLine();
-		System.out.println("Enter arrival day");
+		
+		menu.userInput(" arrival date");
 		int arrival1 = scanner.nextInt();
 		int aday = arrival1;
 
 		scanner.nextLine();
-		System.out.println("Enter arrival month");
+		menu.userInput("arrival month");
 		arrival1 = scanner.nextInt();
 		int amonth = arrival1;
 
 		scanner.nextLine();
-		System.out.println("Enter arrival year");
+		menu.userInput("arrival year");
 		arrival1 = scanner.nextInt();
 		int ayear = arrival1;
 
 		// Departure date
 		scanner.nextLine();
-		System.out.println("Enter departure day");
+		menu.userInput("departure day");
 		arrival1 = scanner.nextInt();
 		int dday = arrival1;
 
 		scanner.nextLine();
-		System.out.println("Enter departure month");
+		menu.userInput("departure month");
 		arrival1 = scanner.nextInt();
 		int dmonth = arrival1;
 
 		scanner.nextLine();
-		System.out.println("Enter departure year");
+		menu.userInput("departure year");
 		arrival1 = scanner.nextInt();
 		int dyear = arrival1;
 
@@ -542,18 +546,19 @@ public class ControllerH implements InterControllerH {
 	}
 
 	public void printAvailableRooms() {
-		System.out.println("Available rooms : ");
+		commonmenu.printOut("Available rooms : ");
 		for (int i = 0; i < availableRooms.size(); i++) {
-			System.out.println(availableRooms.get(i));
+			commonmenu.printOut(availableRooms.get(i));
 		}
-		System.out.println();
+		
 
 	}
 
 	@Override
 	public void exit() {
 		// End program
-		System.out.println("You have end the program");
+		exitProgramMenu = new ExitProgramMenu();
+		exitProgramMenu.exitMenu();
 		System.exit(0);
 	}
 
@@ -578,14 +583,21 @@ public class ControllerH implements InterControllerH {
 
 				if (!occupied.contains(temp.getRoom())) {
 					occupied.add(temp.getRoom());
-					// System.out.println("Occupied" +
-					// temp.getRoom().getRoomNumber());
+					
 
 				}
 			}
 
 		}
 
+	}
+
+	@Override
+	public void returntoMainMenu() {
+		
+		commonmenu.printOut("Press ESC key to return to the main start Menu");
+		
+		
 	}
 
 	
