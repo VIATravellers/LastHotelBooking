@@ -1,8 +1,5 @@
 package model;
 
-import java.util.*;
-
-import db.RoomDB;
 
 public class Booking
 {

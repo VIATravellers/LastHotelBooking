@@ -2,6 +2,8 @@ package controller.controller;
 
 import java.util.ArrayList;
 
+import model.Booking;
+
 public interface InterControllerH {
 	
 	public void start();
@@ -12,6 +14,10 @@ public interface InterControllerH {
 	public void exit();
 	public void printAvailableRooms();
 	public void compareDates();
+	public void checkIn();
+	public void checkOut();
+	public void getPrice(Booking booking);
+	public void setBooking(Booking booking);
 	
 	
 

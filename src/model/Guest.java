@@ -9,15 +9,26 @@ public class Guest {
 	private MyDate dateofbirth;
 	private String telephoneNo;
 	private String email;
+	private String passportNo ;
 
 	// For registration
-	public Guest(String name, String nationality, MyDate dateofbirth, String telephoneNo, String email) {
+	public Guest(String name, String nationality, MyDate dateofbirth, 
+			String telephoneNo, String email,String passportNo) {
 		this.setName(name);
 		this.setNationality(nationality);
 		this.dateofbirth = dateofbirth;
 		this.telephoneNo = telephoneNo;
 		this.email = email;
+		this.passportNo=passportNo;
 
+	}
+
+	public String getPassportNo() {
+		return passportNo;
+	}
+
+	public void setPassportNo(String passportNo) {
+		this.passportNo = passportNo;
 	}
 
 	// For booking
@@ -72,6 +83,8 @@ public class Guest {
 		return "Guest [name=" + name + ", nationality=" + nationality + ", dateofbirth=" + dateofbirth
 				+ ", telephoneNo=" + telephoneNo + ", email=" + email + "]";
 	}
+
+	
 
 	
 }
