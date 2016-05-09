@@ -1,6 +1,13 @@
 package view;
 
-public class ExitProgramMenu implements IExitProgram {
+import java.io.Serializable;
+
+public class ExitProgramMenu implements IExitProgram ,Serializable{
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
 	@Override
 	public void exitMenu() {

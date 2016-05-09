@@ -1,7 +1,14 @@
 package view;
 
-public class DeleteBookingMenu implements IDeleteBooking {
+import java.io.Serializable;
 
+public class DeleteBookingMenu implements IDeleteBooking ,Serializable {
+
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
 	@Override
 	public void userInput(String s) {

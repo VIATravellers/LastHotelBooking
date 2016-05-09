@@ -1,10 +1,16 @@
 package model;
 
+import java.io.Serializable;
 
-public class Booking
+
+public class Booking implements Serializable
 {
 
-   private Guest guest;
+   /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+private Guest guest;
    private MyDate arrivalDate, departureDate;
 
    private Room room;
@@ -58,12 +64,11 @@ public class Booking
   
 
    @Override
-   public String toString()
-   {
+	public String toString() {
 
-      return "Booking  \n\tGuest name = " + guest.getName() + "\n\tArrival date = "
-            + arrivalDate + "\n\tDeparture date = " + departureDate + ",\n\tRoom: "
-            + room.toString() + "\n";
-   }
+		return "Booking  \n\tGuest name = " + guest.getName()
+				+ "\n\tArrival date = " + arrivalDate + "\n\tDeparture date = "
+				+ departureDate + "\n\tRoom: " + room.toString() + "\n";
+	}
 
 }

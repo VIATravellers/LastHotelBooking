@@ -5,5 +5,6 @@ public interface IMainMenu {
 	public void userInput(String s);
 	
 	
+	
 
 }

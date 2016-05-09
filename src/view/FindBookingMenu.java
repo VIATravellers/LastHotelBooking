@@ -1,6 +1,13 @@
 package view;
 
-public class FindBookingMenu implements IFindBookingMenu{
+import java.io.Serializable;
+
+public class FindBookingMenu implements IFindBookingMenu,Serializable{
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
 	@Override
 	public void userInput(String s) {

@@ -1,14 +1,25 @@
 package controller.controller;
 
-
-
+import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
-import view.*;
-import db.RoomDB;
-import model.*;
-
+import model.Booking;
+import model.Guest;
+import model.Hotel;
+import model.MyDate;
+import model.Room;
+import server.HotelDB;
+import server.Server;
+import view.CheckinGuestMenu;
+import view.CheckoutGuestMenu;
+import view.CommonMenu;
+import view.CreateBookingMenu;
+import view.DeleteBookingMenu;
+import view.ExitProgramMenu;
+import view.FindBookingMenu;
+import view.MainMenu;
+import view.ScannerUserInput;
 
 public class ControllerH implements InterControllerH {
 
@@ -18,63 +29,84 @@ public class ControllerH implements InterControllerH {
 	private MyDate tempDep;
 	private MyDate desiredArrival;
 	private MyDate desiredDeparture;
-	private RoomDB rooms;
+	private Hotel hotel;
 	private ArrayList<Booking> bookings;
 	private ArrayList<Room> availableRooms;
 	private ArrayList<Room> occupied;
-    private MainMenu menu ;
-    private CheckinGuestMenu checkinMenu ;
-    private CheckoutGuestMenu checkoutMenu ;
-    private CreateBookingMenu createBookingMenu ;
-    private FindBookingMenu findBookingMenu ;
-    private DeleteBookingMenu deleteBookingMenu ;
-    private ExitProgramMenu exitProgramMenu ;
-    private CommonMenu commonmenu ;
+	private MainMenu menu;
+	private CheckinGuestMenu checkinMenu;
+	private CheckoutGuestMenu checkoutMenu;
+	private CreateBookingMenu createBookingMenu;
+	private FindBookingMenu findBookingMenu;
+	private DeleteBookingMenu deleteBookingMenu;
+	private ExitProgramMenu exitProgramMenu;
+	private CommonMenu commonmenu;
+	private HotelDB hotelDB;
+	private Server server;
+	private boolean correct;
+	
 
+	private ScannerUserInput scanUser;
 
-    
-	public ControllerH() {
-		new MyDate(0, 0, 0);
-		new MyDate(0, 0, 0);
-		new ArrayList<>();
-		new ArrayList<>();
-		new ArrayList<>();
-		new ArrayList<>();
-		new MyDate(0, 0, 0);
-		rooms = new RoomDB();
-		bookings = new ArrayList<>();
+	private int emptyRooms;
+
+	private int[] checkRoomNo;
+
+	private int percent;
+
+	public ControllerH(HotelDB hotelDB1) {
+
+		try {
+			bookings = hotelDB1.getListBookings();
+		} catch (RemoteException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		correct = false;
 		occupied = new ArrayList<>();
 		menu = new MainMenu();
 		checkinMenu = new CheckinGuestMenu();
 		checkoutMenu = new CheckoutGuestMenu();
 		createBookingMenu = new CreateBookingMenu();
-		findBookingMenu = new FindBookingMenu(); 
+		findBookingMenu = new FindBookingMenu();
 		deleteBookingMenu = new DeleteBookingMenu();
 		exitProgramMenu = new ExitProgramMenu();
-		commonmenu=new CommonMenu();
+		commonmenu = new CommonMenu();
+		scanUser = new ScannerUserInput();
+		hotelDB = hotelDB1;
 		
+		checkRoomNo = new int [100];
+		try {
+			hotel = hotelDB.getHotel();
+		} catch (RemoteException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		availableRooms = new ArrayList<>();
 	}
 
 	@Override
 	public void start() {
-	
+
 		menu.startMenu();
-		
 
 		boolean go = false;
 		while (go == false) {
 
-			char number = scanner.next().charAt(0);
+			char i = 0;
+			char number = scanUser.scannerUserInputChar(i);
 
 			if ((number < '1' || number >= '7')
 					&& (number > 'A' || number < 'z')) {
 
-				commonmenu.printOut("Wrong character or incorrect number, try again");
+				commonmenu
+						.printOut("Wrong character or incorrect number, try again");
 
 			}
 
 			else {
-				if (number == '6') {// now the exit will be with 6 instead of 4 u get it daniel ??
+				if (number == '6') {// now the exit will be with 6 instead of 4
+									// u get it daniel ??
 					exit();
 				} else if (number == '1') {
 
@@ -94,12 +126,13 @@ public class ControllerH implements InterControllerH {
 					deleteBooking();
 					go = true;
 
-				}else if (number == '4') {    //this is new (press 4 for checkIn)
+				} else if (number == '4') { // this is new (press 4 for checkIn)
 					commonmenu.printOut("Number: " + number);
 
-					checkIn() ;
+					checkIn();
 					go = true;
-				} else if (number == '5') {  // this is new (press 5 for checkOut)
+				} else if (number == '5') { // this is new (press 5 for
+											// checkOut)
 					commonmenu.printOut("Number: " + number);
 
 					checkOut();
@@ -108,21 +141,34 @@ public class ControllerH implements InterControllerH {
 			}
 
 		}
-
 	}
+
 	// this new (checkOut)
 	public void checkOut() {
 		checkoutMenu = new CheckoutGuestMenu();
-		
-		checkoutMenu.startCheckOut();
-		scanner.nextLine();
-		
-		checkoutMenu.userInput("guest name : ");
-		String name = scanner.nextLine();
-		checkoutMenu.userInput("passportNo :");
-		scanner.nextLine();
-		String passportNo = scanner.nextLine();
 
+		checkoutMenu.startCheckOut();
+
+		checkoutMenu.userInput("guest name : ");
+		String s = "";
+		String name = scanUser.scannerUserInputString(s);
+		checkZeroString(name);
+		checkoutMenu.userInput("passportNo :");
+		String passportNo = null;
+		while(correct !=true){
+
+			
+		passportNo = scanUser.scannerUserInputString(s);
+		if(passportNo.length()<7 || passportNo.length()>7){
+			commonmenu.printOut("Incorrect passport format, try again");
+		}
+		else{
+			correct = true;
+		}
+		}
+		correct = false;
+		checkZeroString(passportNo);
+		
 		Booking result = null;
 		for (int i = 0; i < bookings.size(); i++) {
 			if (bookings.get(i).getGuest().getName().equalsIgnoreCase(name)
@@ -136,9 +182,29 @@ public class ControllerH implements InterControllerH {
 			commonmenu.printOut("No booking founded!");
 		} else {
 			commonmenu.printOut(result.toString());
-			commonmenu.printOut("Press Enter to get the price :");
-			String enter = scanner.nextLine();
-			getPrice(result);
+			commonmenu.printOut("Do you want a discount ? :");
+			String response =scanUser.scannerUserInputString(s);
+			
+			if(response.equalsIgnoreCase("NO"))
+			{
+
+			    getPrice(result);
+			  
+			}
+			else if(response.equalsIgnoreCase("YES"))
+			{
+				
+				commonmenu.printOut("Enter discount percent value : ");
+			    percent = scanUser.scannerUserInputInt2(percent) ;
+				double roomPrice2 = result.getRoom().getRoomPrice()-(percent * result.getRoom().getRoomPrice()/100) ;
+				result.getRoom().setRoomPrice(roomPrice2); 
+				getPrice(result);
+			
+			}
+			else
+			{
+				commonmenu.printOut("Wrong code !");
+			}
 		}
 
 	}
@@ -160,52 +226,104 @@ public class ControllerH implements InterControllerH {
 
 		double costRoom = pricePerDay * count;
 		commonmenu.printOut("Total price : " + costRoom);
+		start() ;
 
 	}
 
-	//this is the checkIn (new)
+	// this is the checkIn (new)
 	public void checkIn() {
-		
+
 		checkinMenu = new CheckinGuestMenu();
 		checkinMenu.startCheckIn();
 		checkinMenu.userInput("guest name :");
-		String name = scanner.nextLine();
+		String s = "";
+		String name = scanUser.scannerUserInputString(s);
+		checkZeroString(name);
 		MyDate today = new MyDate();
-		Booking result = null ;
-		for(int i =0 ;i<bookings.size();i++)
-		{
-			if(bookings.get(i).getGuest().getName().equalsIgnoreCase(name)&&
-					bookings.get(i).getArrivalDate().equals(today))
-			{
-				result = bookings.get(i) ;
-				System.out.println(bookings.get(i).toString());
+		Booking result = null;
+		for (int i = 0; i < bookings.size(); i++) {
+			if (bookings.get(i).getGuest().getName().equalsIgnoreCase(name)
+					) {
+				result = bookings.get(i);
+				commonmenu.printOut(bookings.get(i).toString());
 				setBooking(bookings.get(i));
-				
+
 			}
 		}
-		
-		
+
 	}
 
 	public void setBooking(Booking booking) {
 		commonmenu.printOut("Edit booking :");
 		checkinMenu.userInput("nationality :");
-		String nationality = scanner.nextLine();
+		String s = "";
+		String nationality = scanUser.scannerUserInputString(s);
+		checkZeroString(nationality);
 		checkinMenu.userInput("day of birthday :");
-		int birthday = scanner.nextInt();
+		int i = 0;
+		int birthday =0;
+		while(correct !=true){
+			birthday = scanUser.scannerUserInputInt(i);
+			if(birthday<1 || birthday>31){
+				commonmenu.printOut("Incorrect day, try again");
+			}
+			else{
+				correct = true;
+			}
+		}
+		correct = false;
+		checkZeroInt(birthday);
 		checkinMenu.userInput("month of birthday :");
-		int birthmonth = scanner.nextInt();
+		int birthmonth = 0;
+		while(correct !=true){
+			birthmonth = scanUser.scannerUserInputInt(i);
+			if(birthmonth<1 || birthmonth>12){
+				commonmenu.printOut("Incorrect month, try again");
+			}
+			else{
+				correct = true;
+			}
+		}
+		correct = false;
+		checkZeroInt(birthmonth);
 		checkinMenu.userInput("year of birthday :");
-		int birthyear = scanner.nextInt();
+		int birthyear = 0;
+		while(correct !=true){
+			birthyear = scanUser.scannerUserInputInt(i);
+			if(birthyear<1940 || birthyear>1998){
+				commonmenu.printOut("Incorrect year, try again");
+			}
+			else{
+				correct = true;
+			}
+		}
+		correct = false;
+		
+		checkZeroInt(birthyear);
 		MyDate birthdate = new MyDate(birthday, birthmonth, birthyear);
 		checkinMenu.userInput("passportNo : ");
-		String passportNo = scanner.nextLine() ;
+		String passportNo =null;
+		while(correct !=true){
+
+			
+			passportNo = scanUser.scannerUserInputString(s);
+			if(passportNo.length()<7 || passportNo.length()>7){
+				commonmenu.printOut("Incorrect passport format, try again");
+			}
+			else{
+				correct = true;
+			}
+		}
+		correct = false;
+		
+		checkZeroString(passportNo);
 		Guest guest = new Guest(booking.getGuest().getName(), nationality,
-				birthdate, booking.getGuest().getTelephoneNo(), booking.getGuest().getEmail(),
-				passportNo) ;
+				birthdate, booking.getGuest().getTelephoneNo(), booking
+						.getGuest().getEmail(), passportNo);
 		booking.setGuest(guest);
-		
-		
+		System.out.println(checkinMenu.toString(nationality, passportNo, birthday, birthmonth, birthyear, booking));
+   
+		start();
 	}
 
 	@Override
@@ -213,41 +331,94 @@ public class ControllerH implements InterControllerH {
 
 		searchAvailabeRoom();
 		createBookingMenu = new CreateBookingMenu();
-		
-		createBookingMenu.userInput(" room number");
-		int roomNo = scanner.nextInt();
-		Room room = rooms.getRoomByRoomNo(roomNo);
 
+		createBookingMenu.userInput(" room number");
+
+		int i = 0;
+		int roomNo = 0;
+		  while(correct !=true){
+
+				
+			  roomNo = scanUser.scannerUserInputInt(i);
+			  checkZeroInt(roomNo);
+				if(roomNo<1 || roomNo>25){
+					commonmenu.printOut("Incorrect room number, try again");
+				}
+				
+				correct =true;
+			}
+		 
+	          correct = false;
+				
+	
+		
+
+		Room room = hotel.getRoomByRoomNo(roomNo);
 
 		createBookingMenu.userInput(" name");
-		scanner.nextLine();
-		String name = scanner.nextLine();
+
+		String s = "";
+		String name = scanUser.scannerUserInputString(s);
+		checkZeroString(name);
 
 		createBookingMenu.userInput(" email");
-		String email = scanner.nextLine();
+		String email = null;
+	
+		email = scanUser.scannerUserInputString(s);
+
+		checkZeroString(email);
 
 		createBookingMenu.userInput("phone number");
-		String telephoneNo = scanner.nextLine();
+		String telephoneNo = null;
+          while(correct !=true){
+
+			
+			telephoneNo = scanUser.scannerUserInputString(s);
+			checkZeroString(telephoneNo);
+			if(telephoneNo.length()<8 || telephoneNo.length()>15){
+				commonmenu.printOut("Incorrect telephone number format, try again");
+			}
+			else{
+				correct = true;
+			}
+		}
+          correct = false;
+	
+		
 
 		Guest guest = new Guest(name, email, telephoneNo);
 
 		Booking booking = new Booking(guest, desiredArrival, desiredDeparture,
 				room);
-		bookings.add(booking);
-		commonmenu.printOut(booking.toString());
-		start();
+		
+		
+		try {
+			hotelDB.addBooking(booking);
+			hotelDB.addGuest(guest);
+			bookings.add(booking);
+		} catch (RemoteException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 
+		commonmenu.printOut(booking.toString());
+
+		start();
 	}
 
 	@Override
-	public void findBooking() {
-		
+	public Booking findBooking() {
+
+	
 		findBookingMenu = new FindBookingMenu();
 		findBookingMenu.startFindBooking();
 		boolean go = false;
 		while (go == false) {
 
-			char number = scanner.next().charAt(0);
+			char c = 0;
+
+char number = scanUser.scannerUserInputChar(c);
 
 			if ((number < '1' || number > '5')
 					&& (number > 'A' || number < 'z')) {
@@ -265,120 +436,263 @@ public class ControllerH implements InterControllerH {
 
 				else if (number == '1') {
 					findBookingMenu.userInput(" name");
-					scanner.nextLine();
-					String na = scanner.nextLine();
 
+					String s = "";
+					String na = scanUser.scannerUserInputString(s);
+					checkZeroString(na);
+					/*try {
+						bookings = hotelDB.getListBookings();
+					} catch (RemoteException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+*/
+					
+					int size = bookings.size();
 					for (int i = 0; i < bookings.size(); i++) {
 
 						if (bookings.get(i).getGuest().getName()
 								.equalsIgnoreCase(na)) {
 							commonmenu.printOut(bookings.get(i).toString());
-							go = true;
-							start();
+						 
 
 						}
-
+						else{
+							if(size==0){
+							commonmenu.printOut("Name does not exist in the database, try again");
+						
+							go = true;
+							
+							
+							}
+						}
+						size--;
 					}
+					start();
+					
 
 				} else if (number == '2') {
 					// Arrival date
-					scanner.nextLine();
+
 					findBookingMenu.userInput("arrival day");
-					int arrival1 = scanner.nextInt();
+					int i = 0;
+					int arrival1 = 0;
+					
+					 while(correct !=true){
+
+							
+						 arrival1 = scanUser.scannerUserInputInt(i);
+						 checkZeroInt(arrival1);
+							if(arrival1<1 || arrival1>31){
+								commonmenu.printOut("Incorrect day, try again");
+							}
+							else{
+								correct = true;
+							}
+						}
+					 correct = false;
+					
 					int aday = arrival1;
 
-					scanner.nextLine();
 					findBookingMenu.userInput("arrival month");
-					arrival1 = scanner.nextInt();
+					 while(correct !=true){
+
+							
+						 arrival1 = scanUser.scannerUserInputInt(i);
+						 checkZeroInt(arrival1);
+							if(arrival1<1 || arrival1>12){
+								commonmenu.printOut("Incorrect month, try again");
+							}
+							else{
+								correct = true;
+							}
+						}
+					 correct = false;
+					
 					int amonth = arrival1;
 
-					scanner.nextLine();
 					findBookingMenu.userInput("arrival year");
-					arrival1 = scanner.nextInt();
+					 while(correct !=true){
+
+							
+						 arrival1 = scanUser.scannerUserInputInt(i);
+						 checkZeroInt(arrival1);
+							if( arrival1<2016|| arrival1>2020){
+								commonmenu.printOut("Incorrect year, try again");
+							}
+							else{
+								correct = true;
+							}
+						}
+					 correct = false;
+				
 					int ayear = arrival1;
 
 					// Departure date
-					scanner.nextLine();
 					findBookingMenu.userInput("departure day");
-					arrival1 = scanner.nextInt();
+					 while(correct !=true){
+
+							
+						 arrival1 = scanUser.scannerUserInputInt(i);
+						 checkZeroInt(arrival1);
+							if(arrival1<1 || arrival1>31){
+								commonmenu.printOut("Incorrect day, try again, departure is before or same day as"
+										+ "arrival, try again ");
+							}
+							else{
+								correct = true;
+							}
+						}
+					 correct = false;
+					
 					int dday = arrival1;
 
-					scanner.nextLine();
 					findBookingMenu.userInput("departure month");
-					arrival1 = scanner.nextInt();
+					 while(correct !=true){
+
+							
+						 arrival1 = scanUser.scannerUserInputInt(i);
+						 checkZeroInt(arrival1);
+							if(arrival1<1 || arrival1>12) {
+								commonmenu.printOut("Incorrect month, try again, departure month is before"
+										+ "arrival, try again ");
+							}
+							else{
+								correct = true;
+							}
+						}
+					 correct = false;
+				
 					int dmonth = arrival1;
 
-					scanner.nextLine();
 					findBookingMenu.userInput("departure year");
-					arrival1 = scanner.nextInt();
-					int dyear = arrival1;
+					 while(correct !=true){
 
-					scanner.nextLine();
+							
+						 arrival1 = scanUser.scannerUserInputInt(i);
+						 checkZeroInt(arrival1);
+							if(arrival1>2020 || arrival1<ayear ||(arrival1==ayear && amonth>dmonth)||
+									(arrival1==ayear && amonth==dmonth && aday>=dday)){
+								commonmenu.printOut("Incorrect month, try again, departure month is before"
+										+ "arrival, try again ");
+							}
+							else{
+								correct = true;
+							}
+						}
+					 correct = false;
+					
+					int dyear = arrival1;
 
 					tempArr = new MyDate(aday, amonth, ayear);
 					tempDep = new MyDate(dday, dmonth, dyear);
+				
+					int size = bookings.size();
+					
+					for (int j = 0; j < bookings.size(); j++) {
+						
 
-					for (int i = 0; i < bookings.size(); i++) {
-
-						if (bookings.get(i).getArrivalDate().getDay() == tempArr
+						if (bookings.get(j).getArrivalDate().getDay() == tempArr
 								.getDay()
-								&& bookings.get(i).getArrivalDate().getMonth() == tempArr
+								&& bookings.get(j).getArrivalDate().getMonth() == tempArr
 										.getMonth()
-								&& bookings.get(i).getArrivalDate().getYear() == tempArr
+								&& bookings.get(j).getArrivalDate().getYear() == tempArr
 										.getYear()
-								&& bookings.get(i).getDepartureDate().getDay() == tempDep
+								&& bookings.get(j).getDepartureDate().getDay() == tempDep
 										.getDay()
-								&& bookings.get(i).getDepartureDate()
+								&& bookings.get(j).getDepartureDate()
 										.getMonth() == tempDep.getMonth()
-								&& bookings.get(i).getDepartureDate().getYear() == tempDep
+								&& bookings.get(j).getDepartureDate().getYear() == tempDep
 										.getYear())
-							;
+							
 
 						{
-							commonmenu.printOut(bookings.get(i).toString());
-							go = true;
-							start();
+							commonmenu.printOut(bookings.get(j).toString());
+							return bookings.get(j) ;
+							
 
 						}
-
+						else{
+							if(size==0){
+		
+							go = true;
+							
+							}
+						}
+						size--;
 					}
+					
+					
 
+					start();
 				}
+				
 
 				else if (number == '3') {
 					findBookingMenu.userInput("room number");
 
-					int na = scanner.nextInt();
-
-					for (int i = 0; i < bookings.size(); i++) {
-						if (bookings.get(i).getRoom().getRoomNo() == na) {
-							commonmenu.printOut(bookings.get(i).toString());
-							go = true;
-							start();
-
+					int i = 0;
+					int na1 = 0;
+					while(correct !=true){
+						na1 = scanUser.scannerUserInputInt(i);
+						checkZeroInt(na1);
+						if(na1<1 || na1>25){
+							commonmenu.printOut("Room number is incorrect");;
+						}
+						else{
+							
+							correct = true;
 						}
 					}
+					correct = false;
+					
 
+					 
+					int size = bookings.size();
+					for (int j = 0; j < bookings.size(); j++) {
+						
+						if (bookings.get(j).getRoom().getRoomNo() == na1) {
+							commonmenu.printOut(bookings.get(j).toString());
+							return bookings.get(j) ;
+						
+							
+						}
+						else{
+							if(size==0){
+								go = true;
+								
+								
+							}
+							
+						}
+						size--;
+					}
+
+					start();
 				}
 			}
 
 		}
-
+		return null ;
+		
 	}
 
 	@Override
 	public void deleteBooking() {
+		
 		deleteBookingMenu = new DeleteBookingMenu();
 		deleteBookingMenu.startDeleteBooking();
 		boolean go = false;
 		while (go == false) {
 
-			char number = scanner.next().charAt(0);
+			char c = 0;
+			char number = scanUser.scannerUserInputChar(c);
 
 			if ((number < '1' || number > '5')
 					&& (number > 'A' || number < 'z')) {
 
-				commonmenu.printOut("Wrong character or incorrect number, try again");
+				commonmenu
+						.printOut("Wrong character or incorrect number, try again");
 
 			}
 
@@ -391,167 +705,374 @@ public class ControllerH implements InterControllerH {
 
 				else if (number == '1') {
 					deleteBookingMenu.userInput("name");
-					scanner.nextLine();
-					String na = scanner.nextLine();
-
+					String s = "";
+					String na = scanUser.scannerUserInputString(s);
+					checkZeroString(na);
+				
+					int size = bookings.size();
 					for (int i = 0; i < bookings.size(); i++) {
 
 						if (bookings.get(i).getGuest().getName()
 								.equalsIgnoreCase(na)) {
 							commonmenu.printOut(bookings.get(i).toString());
-							go = true;
-							start();
+						
 
 						}
+						else{
+							if(size==0){
+							go = true;
+							
+							}
+						}
+						 size--;
 
 					}
+					start();
 
 				} else if (number == '2') {
-					// Arrival date
-					scanner.nextLine();
-					deleteBookingMenu.userInput("arrival day");
-					int arrival1 = scanner.nextInt();
+					findBookingMenu.userInput("arrival day");
+					int i = 0;
+					int arrival1 = 0;
+					
+					 while(correct !=true){
+
+							
+						 arrival1 = scanUser.scannerUserInputInt(i);
+						 checkZeroInt(arrival1);
+							if(arrival1<1 || arrival1>31){
+								commonmenu.printOut("Incorrect day, try again");
+							}
+							else{
+								correct = true;
+							}
+						}
+					 correct = false;
+					
 					int aday = arrival1;
 
-					scanner.nextLine();
-					deleteBookingMenu.userInput("arrival month");
-					arrival1 = scanner.nextInt();
+					findBookingMenu.userInput("arrival month");
+					 while(correct !=true){
+
+							
+						 arrival1 = scanUser.scannerUserInputInt(i);
+						 checkZeroInt(arrival1);
+							if(arrival1<1 || arrival1>12){
+								commonmenu.printOut("Incorrect month, try again");;
+							}
+							else{
+								correct = true;
+							}
+						}
+					 correct = false;
+					
 					int amonth = arrival1;
 
-					scanner.nextLine();
-					deleteBookingMenu.userInput("arrival year");
-					arrival1 = scanner.nextInt();
+					findBookingMenu.userInput("arrival year");
+					 while(correct !=true){
+
+							
+						 arrival1 = scanUser.scannerUserInputInt(i);
+						 checkZeroInt(arrival1);
+							if( arrival1<2016|| arrival1>2020){
+								commonmenu.printOut("Incorrect year, try again");;
+							}
+							else{
+								correct = true;
+							}
+						}
+					 correct = false;
+					
 					int ayear = arrival1;
 
 					// Departure date
-					scanner.nextLine();
-					deleteBookingMenu.userInput("departure day");
-					arrival1 = scanner.nextInt();
+					findBookingMenu.userInput("departure day");
+					 while(correct !=true){
+
+							
+						 arrival1 = scanUser.scannerUserInputInt(i);
+						 checkZeroInt(arrival1);
+							if(arrival1<1 || arrival1>31 ){
+								System.out.println("Departure is before or same day as"
+										+ "arrival, try again ");
+							}
+							else{
+								correct = true;
+							}
+						}
+					 correct = false;
+			
 					int dday = arrival1;
 
-					scanner.nextLine();
-					deleteBookingMenu.userInput("departure month");
-					arrival1 = scanner.nextInt();
+					findBookingMenu.userInput("departure month");
+					 while(correct !=true){
+
+							
+						 arrival1 = scanUser.scannerUserInputInt(i);
+						 checkZeroInt(arrival1);
+							if(arrival1<1 || arrival1>12 ){
+								System.out.println("Departure month is before "
+										+ "arrival, try again ");
+							}
+							else{
+								correct = true;
+							}
+						}
+					 correct = false;
+				
 					int dmonth = arrival1;
 
-					scanner.nextLine();
-					deleteBookingMenu.userInput("departure year");
-					arrival1 = scanner.nextInt();
+					findBookingMenu.userInput("departure year");
+					 while(correct !=true){
+
+							
+						 arrival1 = scanUser.scannerUserInputInt(i);
+						 checkZeroInt(arrival1);
+							if(arrival1>2020 || arrival1<ayear ||(arrival1==ayear && amonth>dmonth)||
+									(arrival1==ayear && amonth==dmonth && aday>=dday) ){
+								System.out.println("Departure year is before "
+										+ "arrival, try again ");
+							}
+							else{
+								correct = true;
+							}
+						}
+					 correct = false;
+				
 					int dyear = arrival1;
 
-					scanner.nextLine();
 
 					tempArr = new MyDate(aday, amonth, ayear);
 					tempDep = new MyDate(dday, dmonth, dyear);
+					int size = bookings.size();
+					
+					
+						
+					for (int s = 0; s < bookings.size(); s++) {
 
-					for (int i = 0; i < bookings.size(); i++) {
-
-						if (bookings.get(i).getArrivalDate().getDay() == tempArr
+						if (bookings.get(s).getArrivalDate().getDay() == tempArr
 								.getDay()
-								&& bookings.get(i).getArrivalDate().getMonth() == tempArr
+								&& bookings.get(s).getArrivalDate().getMonth() == tempArr
 										.getMonth()
-								&& bookings.get(i).getArrivalDate().getYear() == tempArr
+								&& bookings.get(s).getArrivalDate().getYear() == tempArr
 										.getYear()
-								&& bookings.get(i).getDepartureDate().getDay() == tempDep
+								&& bookings.get(s).getDepartureDate().getDay() == tempDep
 										.getDay()
-								&& bookings.get(i).getDepartureDate()
+								&& bookings.get(s).getDepartureDate()
 										.getMonth() == tempDep.getMonth()
-								&& bookings.get(i).getDepartureDate().getYear() == tempDep
+								&& bookings.get(s).getDepartureDate().getYear() == tempDep
 										.getYear())
-							;
+							
 
 						{
-							commonmenu.printOut(bookings.get(i).toString());
-							go = true;
-							start();
+							commonmenu.printOut(bookings.get(s).toString());
+							bookings.remove(s);
 
 						}
-
+						else{
+							if(size==0){
+		
+							go = true;
+							
+							}
+						}
+						size--;
 					}
+					
+					
 
+					start();
 				}
+				
 
 				else if (number == '3') {
 					deleteBookingMenu.userInput("room number");
 					scanner.nextInt();
-					int na = scanner.nextInt();
-
+					int m = 0;
+					int na = 0;
+					while(correct !=true){
+						na = scanUser.scannerUserInputInt(m);
+						checkZeroInt(na);
+						if(na<1 || na>25){
+							commonmenu.printOut("Incorrect room number, try again");
+						}
+						else{
+							correct = true;
+						}
+					}
+					correct = false;
+					
+					int size = bookings.size();
 					for (int i = 0; i < bookings.size(); i++) {
 						if (bookings.get(i).getRoom().getRoomNo() == na) {
 							commonmenu.printOut(bookings.get(i).toString());
-							go = true;
-							start();
-
+							
 						}
+							else{
+								if(size==0){
+									go = true;
+									
+									
+								}
+								
+							}
+							size--;
+						}
+
+						start();
 					}
-
 				}
+
 			}
-
+			
 		}
-
-	}
 
 	@Override
 	public void searchAvailabeRoom() {
+		availableRooms = new ArrayList<>();
+		int m = 0;
 		menu = new MainMenu();
 		// Arrival date
+
+		findBookingMenu.userInput("arrival day");
+		int i = 0;
+		int arrival1 = 0;
 		
-		menu.userInput(" arrival date");
-		int arrival1 = scanner.nextInt();
+		 while(correct !=true){
+
+				
+			 arrival1 = scanUser.scannerUserInputInt(i);
+			 checkZeroInt(arrival1);
+				if(arrival1<1 || arrival1>31){
+					commonmenu.printOut("Incorrect day, try again");
+				}
+				else{
+					correct = true;
+				}
+			}
+		 correct = false;
+		
 		int aday = arrival1;
 
-		scanner.nextLine();
-		menu.userInput("arrival month");
-		arrival1 = scanner.nextInt();
+		findBookingMenu.userInput("arrival month");
+		 while(correct !=true){
+
+				
+			 arrival1 = scanUser.scannerUserInputInt(i);
+			 checkZeroInt(arrival1);
+				if(arrival1<1 || arrival1>12){
+					commonmenu.printOut("Incorrect month, try again");
+				}
+				else{
+					correct = true;
+				}
+			}
+		 correct = false;
+	
 		int amonth = arrival1;
 
-		scanner.nextLine();
-		menu.userInput("arrival year");
-		arrival1 = scanner.nextInt();
+		findBookingMenu.userInput("arrival year");
+		 while(correct !=true){
+
+				
+			 arrival1 = scanUser.scannerUserInputInt(i);
+			 checkZeroInt(arrival1);
+				if(arrival1<2016|| arrival1>2020 ){
+					commonmenu.printOut("Incorrect year, try again");
+				}
+				else{
+					correct = true;
+				}
+			}
+		 correct = false;
+		
 		int ayear = arrival1;
 
 		// Departure date
-		scanner.nextLine();
-		menu.userInput("departure day");
-		arrival1 = scanner.nextInt();
+		findBookingMenu.userInput("departure day");
+		 while(correct !=true){
+
+				
+			 arrival1 = scanUser.scannerUserInputInt(i);
+			 checkZeroInt(arrival1);
+				if(arrival1<1 || arrival1>31 ){
+					System.out.println("Incorrect day or departure is before or same day as "
+							+ "arrival, try again ");
+				}
+				else{
+					correct = true;
+				}
+			}
+		 correct = false;
+	
 		int dday = arrival1;
 
-		scanner.nextLine();
-		menu.userInput("departure month");
-		arrival1 = scanner.nextInt();
+		findBookingMenu.userInput("departure month");
+		 while(correct !=true){
+
+				
+			 arrival1 = scanUser.scannerUserInputInt(i);
+			 checkZeroInt(arrival1);
+				if(arrival1<1 || arrival1>12 ){
+					System.out.println("Incorrect month or departure month is before "
+							+ "arrival, try again ");
+				}
+				else{
+					correct = true;
+				}
+			}
+		 correct = false;
+	
 		int dmonth = arrival1;
 
-		scanner.nextLine();
-		menu.userInput("departure year");
-		arrival1 = scanner.nextInt();
+		findBookingMenu.userInput("departure year");
+		 while(correct !=true){
+
+				
+			 arrival1 = scanUser.scannerUserInputInt(i);
+			 checkZeroInt(arrival1);
+				if(arrival1>2020 || arrival1<ayear ||(arrival1==ayear && amonth>dmonth)||
+						(arrival1==ayear && amonth==dmonth && aday>=dday)){
+					System.out.println("Incorrect year or departure year is before "
+							+ "arrival, try again ");
+				}
+				else{
+					correct = true;
+				}
+			}
+		 correct = false;
+	
 		int dyear = arrival1;
 
-		scanner.nextLine();
 
 		desiredArrival = new MyDate(aday, amonth, ayear);
 		desiredDeparture = new MyDate(dday, dmonth, dyear);
 
-		compareDates();
+		compareDates(desiredArrival,desiredDeparture);
 		ArrayList<Room> roomDB = new ArrayList<>();
-		availableRooms = new ArrayList<>();
-		roomDB = rooms.getRooms();
 
-		for (int i = 0; i < roomDB.size(); i++) {
-			if (!occupied.contains(roomDB.get(i))) {
-				availableRooms.add(roomDB.get(i));
+		roomDB = hotel.getRooms();
+		
+		for (int k = 0; k < roomDB.size(); k++) {
+			if (!occupied.contains(roomDB.get(k))) {
+				availableRooms.add(roomDB.get(k));
 			}
+			
 		}
+		
 		printAvailableRooms();
 	}
 
 	public void printAvailableRooms() {
+		
 		commonmenu.printOut("Available rooms : ");
 		for (int i = 0; i < availableRooms.size(); i++) {
+			
 			commonmenu.printOut(availableRooms.get(i));
 		}
+	
 		
-
+		
+	
 	}
 
 	@Override
@@ -563,43 +1084,73 @@ public class ControllerH implements InterControllerH {
 	}
 
 	@Override
-	public void compareDates() {
+	public ArrayList<Room> compareDates(MyDate desiredArrival,MyDate desiredDeparture) {
+		
 		for (int i = 0; i < bookings.size(); i++) {
-			Booking temp = bookings.get(i);
+			
 
-			if ((desiredArrival.isBetween(temp.getArrivalDate(),
-					temp.getDepartureDate()))
-					|| (desiredDeparture.isBetween(temp.getArrivalDate(),
-							temp.getDepartureDate()))
-					|| ((desiredDeparture.equals(temp.getDepartureDate())) && (desiredArrival
-							.equals(temp.getArrivalDate())))
-					|| ((temp.getArrivalDate().isBetween(desiredArrival,
-							desiredDeparture)) && (temp.getDepartureDate()
+			if ((desiredArrival.isBetween(bookings.get(i).getArrivalDate(),
+					bookings.get(i).getDepartureDate()))
+					|| (desiredDeparture.isBetween(bookings.get(i).getArrivalDate(),
+							bookings.get(i).getDepartureDate()))
+					|| ((desiredDeparture.equals(bookings.get(i).getDepartureDate())) && (desiredArrival
+							.equals(bookings.get(i).getArrivalDate())))
+					|| ((bookings.get(i).getArrivalDate().isBetween(desiredArrival,
+							desiredDeparture)) && (bookings.get(i).getDepartureDate()
 							.isBetween(desiredArrival, desiredDeparture)))
-					|| ((desiredArrival.isBetween(temp.getArrivalDate(),
-							temp.getDepartureDate())) && (desiredDeparture
-							.isBetween(temp.getArrivalDate(),
-									temp.getDepartureDate())))) {
+					|| ((desiredArrival.isBetween(bookings.get(i).getArrivalDate(),
+							bookings.get(i).getDepartureDate())) && (desiredDeparture
+							.isBetween(bookings.get(i).getArrivalDate(),
+									bookings.get(i).getDepartureDate())))) {
 
-				if (!occupied.contains(temp.getRoom())) {
-					occupied.add(temp.getRoom());
-					
+				if (!occupied.contains(bookings.get(i).getRoom())) {
+					occupied.add(bookings.get(i).getRoom());
 
 				}
 			}
 
 		}
+		return occupied ;
 
 	}
 
 	@Override
-	public void returntoMainMenu() {
-		
-		commonmenu.printOut("Press ESC key to return to the main start Menu");
-		
-		
+	public void checkZeroInt(int i) {
+		if (i == 0) {
+			start();
+		}
+
 	}
 
-	
+	@Override
+	public void checkZeroString(String s) {
+		if (s.equals("0")) {
+			start();
+		}
+
+	}
+
+	public ArrayList<Booking> printBookings() {
+		return bookings;
+	}
+
+	@Override
+	public ArrayList<Booking> returnBookings() {
+		ArrayList<Booking> book = new ArrayList<Booking>();
+		for (int i = 0; i < bookings.size(); i++) {
+			book.add(bookings.get(i));
+		}
+		return book;
+	}
+
+	public ArrayList<Room> getAvailableRoomS() {
+		return availableRooms;
+	}
+
+	@Override
+	public Hotel getHotel() {
+		// TODO Auto-generated method stub
+		return hotel;
+	}
 
 }

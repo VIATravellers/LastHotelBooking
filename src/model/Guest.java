@@ -1,9 +1,14 @@
 package model;
 
+import java.io.Serializable;
 import java.sql.Date;
 
-public class Guest {
+public class Guest implements Serializable{
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private String name;
 	private String nationality;
 	private MyDate dateofbirth;
@@ -80,9 +85,12 @@ public class Guest {
 
 	@Override
 	public String toString() {
-		return "Guest [name=" + name + ", nationality=" + nationality + ", dateofbirth=" + dateofbirth
-				+ ", telephoneNo=" + telephoneNo + ", email=" + email + "]";
+		return "Guest \t\n Guest name: " + name + "\t\n Nationality: "
+				+ nationality + "\t\n Date of birth: " + dateofbirth
+				+ "\t\n Telephone number: " + telephoneNo + "\t\n Email: "
+				+ email +"\n";
 	}
+
 
 	
 

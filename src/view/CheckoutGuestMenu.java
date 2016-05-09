@@ -1,7 +1,14 @@
 package view;
 
+import java.io.Serializable;
 
-public class CheckoutGuestMenu implements ICheckoutGuest{
+
+public class CheckoutGuestMenu implements ICheckoutGuest ,Serializable{
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
 	@Override
 	public void userInput(String s) {
